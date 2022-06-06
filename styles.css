@@ -1,0 +1,21 @@
+.outer-container {
+    width: 30%;
+    height: 50%;
+    background-color: lightgrey;
+}
+
+.inner-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    padding: 10px;
+    border: 2px solid black;
+}
+
+.output {
+    grid-column: span 1/-1;
+}
+
+.zero {
+    grid-column: span 1/3;
+}
