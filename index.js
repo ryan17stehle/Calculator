@@ -1,169 +1,137 @@
-/*
-Haven't worked through multiple operations (9*9*9)
-*/
+class Calculator {
+    constructor(previousOperandTextElement, currentOperandTextElement) {
+        this.previousOperandTextElement = previousOperandTextElement;
+        this.currentOperandTextElement = currentOperandTextElement;
+        this.clear();
+    }
 
-const history = document.querySelector('.history')
-const output = document.querySelector('.output');
-const clearBtn = document.querySelector('.clear');
-const signBtn = document.querySelector('.sign');
-const moduloBtn = document.querySelector('.modulo');
-const divideBtn = document.querySelector('.divide');
-const sevenBtn = document.querySelector('.seven');
-const eightBtn = document.querySelector('.eight');
-const nineBtn = document.querySelector('.nine');
-const multiplyBtn = document.querySelector('.multiply');
-const fourBtn = document.querySelector('.four');
-const fiveBtn = document.querySelector('.five');
-const sixBtn = document.querySelector('.six');
-const minusBtn = document.querySelector('.minus');
-const oneBtn = document.querySelector('.one');
-const twoBtn = document.querySelector('.two');
-const threeBtn = document.querySelector('.three');
-const plusBtn = document.querySelector('.plus');
-const zeroBtn = document.querySelector('.zero');
-const pointBtn = document.querySelector('.point');
-const equalsBtn = document.querySelector('.equals');
-const numbersBtns = document.querySelectorAll('.number');
-const operationBtns = document.querySelectorAll('.operation');
+    clear() {
+        this.currentOperand = '';
+        this.previousOperand = '';
+        this.operation = undefined;
+    }
 
-// Global String for holding multiple numbers
-const DEFAULT_NUMBER_STR = "0"
-let numberStr = DEFAULT_NUMBER_STR;
-output.textContent = numberStr;
+    appendNumber(num) {
+        // if '.' is clicked and current operand already has a '.' => return 
+        if (num === '.' && this.currentOperand.includes('.')) return;
+        // else append num to the current operand via string concatenation. Ex: 7 => 77
+        this.currentOperand += num.toString();
+    }
 
-// Global Array for holding num1, operation, num2
-let placeholderArray = [];
+    getDisplayNumber(num) {
+        // convert num to string
+        const numString = num.toString();
+        // get the numbers before the '.'
+        const integerDigits = parseFloat(numString.split('.')[0]);
+        // get the numbers after the '.'
+        const decimalDigits = numString.split('.')[1];
 
-function add(a, b) {
-    return a + b;
-}
-function subtract(a, b) {
-    return a - b;
-}
-function multiply(a, b) {
-    return a * b;
-}
-function divide(a, b) {
-    return a / b;
-}
+        let integerDisplay;
+        // if a number wasn't selected
+        if (isNaN(integerDigits)) {
+            integerDisplay = '';
+        } else {
+            // formatting so no decimal is displayed
+            integerDisplay = integerDigits.toLocaleString('en', {maximumFractionDigits: 0})
+        }
 
-function modulo(a, b) {
-    return a % b;
-}
+        // if there are decimals, concatenate integerDisplay and decimalDigits
+        if (decimalDigits != null) {
+            return `${integerDisplay}.${decimalDigits}`
+        } else {
+            return integerDisplay;
+        }
 
-function operate(operator, a, b) {
-    let result = 0;
-    switch (operator) {
-        case 'add':
-            result = add(a, b);
+    }
+
+    updateOutput() {
+        // call this.getDisplayNumber to perform formatting on any clicked numbers/decimals
+        // set the text of the currentOperandTextElement to the formatted numbers/decimals
+        this.currentOperandTextElement.textContent = this.getDisplayNumber(this.currentOperand);
+        if (this.operation != null) {
+            // if an operation is defined (previously clicked), add it to the textContent
+            this.previousOperandTextElement.textContent = `${this.getDisplayNumber(this.previousOperand)} 
+            ${this.operation}`;
+        } else {
+            this.previousOperandTextElement.textContent = '';
+        }
+    }
+
+    chooseOperation(operation) {
+        if (this.currentOperand === '') return;
+        if (this.previousOperand !== '') {
+            this.compute();
+        }
+        this.operation = operation;
+        this.previousOperand = this.currentOperand;
+        this.currentOperand = '';
+    }
+
+    delete() {
+        this.currentOperand = this.currentOperand.slice(0, -1);
+    }
+
+    compute() {
+        let computation;
+        const prev = parseFloat(this.previousOperand);
+        const current = parseFloat(this.currentOperand);
+        if (isNaN(prev) || isNaN(current)) return;
+        switch (this.operation) {
+        case '+':
+            computation = prev + current;
             break;
-        case 'subtract':
-            result = subtract(a, b);
+        case '-':
+            computation = prev - current;
             break;
-        case 'multiply':
-            result = multiply(a, b);
+        case '*':
+            computation = prev * current;
             break;
-        case 'divide':
-            if (b === 0) {
-                return "Cannot divide by zero."
-            } else {
-                result = divide(a, b).toFixed(2);
-                console.log(result);
-            }
+        case '÷':
+            computation = prev / current;
             break;
-        case 'modulo':
-            result = modulo(a, b);
+        case '%':
+            computation = prev % current;
             break;
         default:
-            console.log(`Invalid operation requested.`)
+            return
+        }
+        this.currentOperand = computation
+        this.operation = undefined
+        this.previousOperand = ''
     }
-    return result;
 }
 
-clearBtn.addEventListener('click', clear);
-function clear() {
-    numberStr = DEFAULT_NUMBER_STR;
-    output.textContent = numberStr;
-    placeholderArray.length = 0;
-}
+const numberButtons = document.querySelectorAll('.number');
+const operationButtons = document.querySelectorAll('.operation');
+const equalsButton = document.querySelector('.equals');
+const deleteButton = document.querySelector('.delete');
+const allClearButton = document.querySelector('.all-clear');
+const previousOperandTextElement = document.querySelector('.previous-operand');
+const currentOperandTextElement = document.querySelector('.current-operand');
 
-signBtn.addEventListener('click', flipSign);
-function flipSign() {
-    let num = parseInt(numberStr);
-    if (num < 0) {
-        num = (num - (2 * num));
-    } else if (num > 0) {
-        num = num - num * 2;
-    }
-    numberStr = num.toString();
-    output.textContent = numberStr;
-}
+const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement)
 
-/* Event listeners for all numbered buttons */
-numbersBtns.forEach(item => item.addEventListener('click', (e) => {
-    if (numberStr === DEFAULT_NUMBER_STR) {
-        numberStr = e.target.value;
-    } else {
-        numberStr += e.target.value
-    }
-    output.textContent = numberStr;
+numberButtons.forEach(number => number.addEventListener('click', (e) => {
+    calculator.appendNumber(e.target.value);
+    calculator.updateOutput();
 }))
 
-/* Event listeners for all operations */
-operationBtns.forEach(item => item.addEventListener('click', (e) => {
-    // Once an operator symbol is clicked, the numberStr is finalized.
-    // We can now push the number into the placeholder array.
-    let num = 0;
-    if (numberStr.includes('.')) {
-        num = parseFloat(numberStr);
-    } else {
-        num = parseInt(numberStr)
-    }
-    console.log(num)
-    placeholderArray.push(num);
-
-    // if there are 3 elements in the array, run operate()
-    if (placeholderArray.length >= 3) {
-        let len = placeholderArray.length;
-        let operator = placeholderArray[len-2];
-        let num1 = placeholderArray[len-3];
-        let num2 = placeholderArray[len-1];
-        let result = operate(operator, num1, num2);
-        numberStr = result.toString();
-        placeholderArray.push(result)
-    }
-    console.log(placeholderArray)
-    placeholderArray.push(e.target.value)
-    console.log(placeholderArray)
-
-    let operatorStr = e.target.firstChild.data;
-    output.textContent = `${numberStr} ${operatorStr}`;
-
-    // clear the number string
-    numberStr = DEFAULT_NUMBER_STR;
+operationButtons.forEach(operation => operation.addEventListener('click', (e) => {
+    calculator.chooseOperation(e.target.value);
+    calculator.updateOutput();
 }))
 
-equalsBtn.addEventListener('click', equals)
+equalsButton.addEventListener('click', () => {
+    calculator.compute();
+    calculator.updateOutput();
+})
 
-function equals() {
-    let num = parseInt(numberStr);
-    placeholderArray.push(num);
-    
-    let len = placeholderArray.length;
-    let operator = placeholderArray[len-2];
-    let num1 = placeholderArray[len-3];
-    let num2 = placeholderArray[len-1];
-    
-    numberStr = operate(operator, num1, num2); 
-    output.textContent = numberStr;
-}
+allClearButton.addEventListener('click', () => {
+    calculator.clear();
+    calculator.updateOutput();
+})
 
-/* 
-Scenario 1: 7 * 9 = 63 --> 63 + 3 = 66. 
-Scenario 2: 7 * 9 + 3. Intermediate value needs to be calculated 
-before + can be evaluated.
-
-if (placeholderArray.length >= 3) {
-
-}
-*/
+deleteButton.addEventListener('click', () => {
+    calculator.delete();
+    calculator.updateOutput();
+})
